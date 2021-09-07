@@ -9,6 +9,7 @@
 
 #include "wx-sdl2-video-gl3.h"
 #include "wx-sdl2-video-renderer.h"
+#include "wx-sdl2-video-crt.h"
 
 void video_blit_complete();
 
@@ -38,7 +39,8 @@ static sdl_render_driver sdl_render_drivers[] = {
                 { RENDERER_OPENGLES2, "opengles2", "OpenGL ES 2", 0, sdl2_renderer_create, sdl2_renderer_close, sdl2_renderer_available },
                 { RENDERER_OPENGLES, "opengles", "OpenGL ES", 0, sdl2_renderer_create, sdl2_renderer_close, sdl2_renderer_available },
                 { RENDERER_SOFTWARE, "software", "Software", 0, sdl2_renderer_create, sdl2_renderer_close, sdl2_renderer_available },
-                { RENDERER_GL3, "gl3", "OpenGL 3.0", SDL_WINDOW_OPENGL, gl3_renderer_create, gl3_renderer_close, gl3_renderer_available }
+                { RENDERER_GL3, "gl3", "OpenGL 3.0", SDL_WINDOW_OPENGL, gl3_renderer_create, gl3_renderer_close, gl3_renderer_available },
+                { RENDERER_CRT, "crt", "CRT Emulation", SDL_WINDOW_OPENGL, crt_renderer_create, crt_renderer_close, crt_renderer_available }
 };
 
 sdl_render_driver requested_render_driver;

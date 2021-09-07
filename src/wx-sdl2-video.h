@@ -5,6 +5,7 @@
 #define RENDERER_OPENGLES 4
 #define RENDERER_SOFTWARE 5
 #define RENDERER_GL3 6
+#define RENDERER_CRT 7
 
 struct sdl_render_driver;
 

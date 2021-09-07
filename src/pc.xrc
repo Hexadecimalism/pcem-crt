@@ -213,6 +213,10 @@
 					<label>Software</label>
 					<radio>1</radio>
 				</object>
+				<object class="wxMenuItem" name="IDM_VID_RENDER_DRIVER[7]">
+					<label>CRT Emulation</label>
+					<radio>1</radio>
+				</object>
 			</object>
 			<object class="wxMenuItem" name="IDM_VID_VSYNC">
 				<label>_VSync</label>
