@@ -29,6 +29,8 @@ static int last_video_h = 0;
 
 extern int video_vsync;
 
+int crt_monitor_frame = 1;
+
 int crt_init(SDL_Window* window, sdl_render_driver requested_render_driver, SDL_Rect screen)
 {
         strcpy(current_render_driver_name, requested_render_driver.name);
@@ -125,6 +127,7 @@ void crt_present(SDL_Window* window, SDL_Rect video_rect, SDL_Rect window_rect, 
         unsigned long long t = SDL_GetTicks() * 1000;
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(window_rect.x, window_rect.y, window_rect.w, window_rect.h);
+        crtemu->use_frame = crt_monitor_frame ? 1.0f : 0.0f;
         crtemu_pc_present(crtemu, t, video_rect.w, video_rect.h, 0xFFFFFF, 0x181818);
         
         SDL_GL_SwapWindow(window);

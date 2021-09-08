@@ -393,6 +393,13 @@
 					<label>Shader manager</label>
 				</object>
 			</object>
+			<object class="wxMenu" name="IDM_VID_CRT">
+				<label>CRT Emulation renderer</label>
+				<object class="wxMenuItem" name="IDM_VID_CRT_MONITOR_FRAME">
+					<label>Monitor frame</label>
+					<checkable>1</checkable>
+				</object>
+			</object>
 		</object>
 		<object class="wxMenu">
 			<label>Sound</label>

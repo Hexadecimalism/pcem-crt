@@ -119,6 +119,8 @@ extern float gl3_input_scale;
 extern int gl3_input_stretch;
 extern char gl3_shader_file[20][512];
 
+extern int crt_monitor_frame;
+
 char screenshot_format[10];
 int screenshot_flash = 1;
 int take_screenshot = 0;
@@ -351,6 +353,8 @@ void sdl_loadconfig()
                 strncpy(gl3_shader_file[i], config_get_string(CFG_MACHINE, "GL3 Shaders", s, ""), 511);
                 gl3_shader_file[i][511] = 0;
         }
+
+        crt_monitor_frame = config_get_int(CFG_MACHINE, "CRT", "monitor_frame", crt_monitor_frame);
 }
 
 void sdl_saveconfig()
@@ -389,6 +393,8 @@ void sdl_saveconfig()
                         break;
         }
         config_set_int(CFG_MACHINE, "GL3 Shaders", "shaders", i);
+
+        config_set_int(CFG_MACHINE, "CRT", "monitor_frame", crt_monitor_frame);
 }
 
 void update_cdrom_menu(void* hmenu)
@@ -499,6 +505,7 @@ int wx_setupmenu(void* data)
 
 //        wx_enablemenuitem(menu, WX_ID("IDM_VID_SDL2"), requested_render_driver.id != RENDERER_GL3);
         wx_enablemenuitem(menu, WX_ID("IDM_VID_GL3"), requested_render_driver.id == RENDERER_GL3);
+        wx_enablemenuitem(menu, WX_ID("IDM_VID_CRT"), requested_render_driver.id == RENDERER_CRT);
 
         sprintf(menuitem, "IDM_VID_GL3_INPUT_STRETCH[%d]", gl3_input_stretch);
         wx_checkmenuitem(menu, WX_ID(menuitem), WX_MB_CHECKED);
@@ -506,6 +513,8 @@ int wx_setupmenu(void* data)
         wx_checkmenuitem(menu, WX_ID(menuitem), WX_MB_CHECKED);
         sprintf(menuitem, "IDM_VID_GL3_SHADER_REFRESH_RATE[%g]", gl3_shader_refresh_rate);
         wx_checkmenuitem(menu, WX_ID(menuitem), WX_MB_CHECKED);
+
+        wx_checkmenuitem(menu, WX_ID("IDM_VID_CRT_MONITOR_FRAME"), crt_monitor_frame);
 
         return 1;
 }
@@ -1068,6 +1077,7 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
                 /* update enabled menu-items */
 //                wx_enablemenuitem(menu, WX_ID("IDM_VID_SDL2"), requested_render_driver.id != RENDERER_GL3);
                 wx_enablemenuitem(menu, WX_ID("IDM_VID_GL3"), requested_render_driver.id == RENDERER_GL3);
+                wx_enablemenuitem(menu, WX_ID("IDM_VID_CRT"), requested_render_driver.id == RENDERER_CRT);
 
                 wx_checkmenuitem(hmenu, wParam, WX_MB_CHECKED);
                 saveconfig(NULL);
@@ -1126,6 +1136,12 @@ int wx_handle_command(void* hwnd, int wParam, int checked)
 //                        saveconfig(NULL);
 //                }
 
+        }
+        else if (ID_IS("IDM_VID_CRT_MONITOR_FRAME"))
+        {
+                crt_monitor_frame = !crt_monitor_frame;
+                wx_checkmenuitem(menu, wParam, crt_monitor_frame);
+                saveconfig(NULL);
         }
         else if (ID_RANGE("IDM_SND_BUF[start]", "IDM_SND_BUF[end]"))
         {
