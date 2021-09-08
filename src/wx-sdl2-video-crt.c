@@ -146,7 +146,31 @@ void crt_renderer_close(sdl_renderer_t* renderer)
         free(renderer);
 }
 
+static int renderer_available = -1;
 int crt_renderer_available(struct sdl_render_driver* driver)
 {
-        return 1;
+        if(renderer_available < 0)
+        {
+                renderer_available = 0;
+
+                SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+                SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+                SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+                SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+                SDL_Window* window = SDL_CreateWindow("", 0, 0, 1, 1, SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL);
+                if(window)
+                {
+                        SDL_GLContext context = SDL_GL_CreateContext(window);
+                        if(context)
+                        {
+                                int glversion = -1;
+                                glGetIntegerv(GL_MAJOR_VERSION, &glversion);
+                                SDL_GL_DeleteContext(context);
+                                renderer_available = glversion >= 3 ? 1 : 0;
+                        }
+                        SDL_DestroyWindow(window);
+                }
+        }
+        return renderer_available;
 }
