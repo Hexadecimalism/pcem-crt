@@ -37,7 +37,7 @@ void crtemu_pc_config(crtemu_pc_t* crtemu_pc, crtemu_pc_config_t const* config);
 
 void crtemu_pc_frame( crtemu_pc_t* crtemu_pc, CRTEMU_PC_U32* frame_abgr, int frame_width, int frame_height );
 
-void crtemu_pc_present( crtemu_pc_t* crtemu_pc, CRTEMU_PC_U64 time_us, CRTEMU_PC_U32 const* pixels_xbgr, int width, int height, 
+void crtemu_pc_present( crtemu_pc_t* crtemu_pc, CRTEMU_PC_U64 time_us, CRTEMU_PC_U32 const* pixels, int width, int height, int pixelformat,
     CRTEMU_PC_U32 mod_xbgr, CRTEMU_PC_U32 border_xbgr );
 
 void crtemu_pc_coordinates_window_to_bitmap( crtemu_pc_t* crtemu_pc, int width, int height, int* x, int* y );
@@ -921,7 +921,7 @@ static void crtemu_pc_internal_blur( crtemu_pc_t* crtemu_pc, CRTEMU_PC_GLuint so
     }
 
 
-void crtemu_pc_present( crtemu_pc_t* crtemu_pc, CRTEMU_PC_U64 time_us, CRTEMU_PC_U32 const* pixels_xbgr, int width, int height, 
+void crtemu_pc_present( crtemu_pc_t* crtemu_pc, CRTEMU_PC_U64 time_us, CRTEMU_PC_U32 const* pixels, int width, int height, int pixelformat,
     CRTEMU_PC_U32 mod_xbgr, CRTEMU_PC_U32 border_xbgr )
     {
     int viewport[ 4 ];
@@ -973,7 +973,7 @@ void crtemu_pc_present( crtemu_pc_t* crtemu_pc, CRTEMU_PC_U64 time_us, CRTEMU_PC
     // Copy to backbuffer
     crtemu_pc->ActiveTexture( CRTEMU_PC_GL_TEXTURE0 );
     crtemu_pc->BindTexture( CRTEMU_PC_GL_TEXTURE_2D, crtemu_pc->backbuffer );
-    crtemu_pc->TexImage2D( CRTEMU_PC_GL_TEXTURE_2D, 0, CRTEMU_PC_GL_RGBA, width, height, 0, CRTEMU_PC_GL_RGBA, CRTEMU_PC_GL_UNSIGNED_BYTE, pixels_xbgr ); 
+    crtemu_pc->TexImage2D( CRTEMU_PC_GL_TEXTURE_2D, 0, CRTEMU_PC_GL_RGBA, width, height, 0, pixelformat, CRTEMU_PC_GL_UNSIGNED_BYTE, pixels ); 
     crtemu_pc->BindTexture( CRTEMU_PC_GL_TEXTURE_2D, 0 );
 
     crtemu_pc->Viewport( 0, 0, width, height );

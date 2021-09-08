@@ -91,7 +91,7 @@ void crt_present(SDL_Window* window, SDL_Rect video_rect, SDL_Rect window_rect, 
 {
         unsigned long long t = SDL_GetTicks() * 1000;
         glViewport(window_rect.x, window_rect.y, window_rect.w, window_rect.h);
-        crtemu_pc_present(crtemu, t, frame, frame_w, frame_h, 0xFFFFFF, 0x181818);
+        crtemu_pc_present(crtemu, t, frame, frame_w, frame_h, GL_BGRA, 0xFFFFFF, 0x181818);
         SDL_GL_SwapWindow(window);
 }
 
