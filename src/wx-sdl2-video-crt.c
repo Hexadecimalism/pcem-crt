@@ -15,12 +15,17 @@
 #include "crtemu/crtemu_pc.h"
 #include "crtemu/crt_frame_pc.h"
 
+static PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
+static PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer;
+static PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers;
+static PFNGLFRAMEBUFFERTEXTURE2DPROC glFramebufferTexture2D;
+
 static SDL_GLContext context = NULL;
 static crtemu_pc_t* crtemu = NULL;
-
-static uint32_t* frame = NULL;
-static int frame_w = 0;
-static int frame_h = 0;
+static GLuint screen_tex = 0;
+static GLuint screen_fbo = 0;
+static int last_video_w = 0;
+static int last_video_h = 0;
 
 extern int video_vsync;
 
@@ -28,10 +33,10 @@ int crt_init(SDL_Window* window, sdl_render_driver requested_render_driver, SDL_
 {
         strcpy(current_render_driver_name, requested_render_driver.name);
         
-        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         
         context = SDL_GL_CreateContext(window);
         if(!context)
@@ -39,8 +44,14 @@ int crt_init(SDL_Window* window, sdl_render_driver requested_render_driver, SDL_
                 pclog("Could not create GL context.\n");
                 return SDL_FALSE;
         }
-        SDL_GL_SetSwapInterval(video_vsync ? 1 : 0);
+        glGenFramebuffers = SDL_GL_GetProcAddress("glGenFramebuffers");
+        glBindFramebuffer = SDL_GL_GetProcAddress("glBindFramebuffer");
+        glDeleteFramebuffers = SDL_GL_GetProcAddress("glDeleteFramebuffers");
+        glFramebufferTexture2D = SDL_GL_GetProcAddress("glFramebufferTexture2D");
 
+        SDL_GL_SetSwapInterval(video_vsync ? 1 : 0);
+        glEnable(GL_TEXTURE_2D);
+        
         crtemu = crtemu_pc_create(NULL);
         if(!crtemu)
         {
@@ -49,16 +60,33 @@ int crt_init(SDL_Window* window, sdl_render_driver requested_render_driver, SDL_
         }
         crtemu_pc_frame(crtemu, (unsigned int*)a_crt_frame, 1024, 1024);
 
+        glGenTextures(1, &screen_tex);
+        glBindTexture(GL_TEXTURE_2D, screen_tex);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, screen.w, screen.h, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        glGenFramebuffers(1, &screen_fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, screen_fbo);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_tex, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
         return SDL_TRUE;
 }
 
 void crt_close()
 {
-        free(frame);
-        frame   = NULL;
-        frame_w = 0;
-        frame_h = 0;
-
+        last_video_w = 0;
+        last_video_h = 0;
+        if(screen_fbo)
+        {
+                glDeleteFramebuffers(1, &screen_fbo);
+                screen_fbo = 0;
+        }
+        if(screen_tex)
+        {
+                glDeleteTextures(1, &screen_tex);
+                screen_tex = 0;
+        }
         if(crtemu)
         {
                 crtemu_pc_destroy(crtemu);
@@ -73,25 +101,32 @@ void crt_close()
 
 void crt_update(SDL_Window* window, SDL_Rect updated_rect, BITMAP* screen)
 {
-        if(frame_w != updated_rect.w || frame_h != updated_rect.h)
-        {
-                frame_w = updated_rect.w;
-                frame_h = updated_rect.h;
-                free(frame);
-                frame = malloc(frame_w * frame_h * 4);
-        }
-        const uint32_t* screen_ptr = &((uint32_t*)screen->dat)[updated_rect.y * screen->w + updated_rect.x];
-        for(int row=0; row<frame_h; row++)
-        {
-                memcpy(&frame[row*frame_w], &screen_ptr[row*screen->w], frame_w * 4);
-        }
+        const uint32_t* pixels = &((uint32_t*)screen->dat)[updated_rect.y * screen->w + updated_rect.x];
+        glBindTexture(GL_TEXTURE_2D, screen_tex);
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, screen->w);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, updated_rect.x, updated_rect.y, updated_rect.w, updated_rect.h, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, pixels );
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void crt_present(SDL_Window* window, SDL_Rect video_rect, SDL_Rect window_rect, SDL_Rect screen)
 {
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, screen_fbo);
+        glBindTexture(GL_TEXTURE_2D, crtemu->backbuffer);
+        if(video_rect.w != last_video_w || video_rect.h != last_video_h)
+        {
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, video_rect.w, video_rect.h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+                last_video_w = video_rect.w;
+                last_video_h = video_rect.h;
+        }
+        glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, video_rect.x, video_rect.y, video_rect.w, video_rect.h);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
         unsigned long long t = SDL_GetTicks() * 1000;
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(window_rect.x, window_rect.y, window_rect.w, window_rect.h);
-        crtemu_pc_present(crtemu, t, frame, frame_w, frame_h, GL_BGRA, 0xFFFFFF, 0x181818);
+        crtemu_pc_present(crtemu, t, video_rect.w, video_rect.h, 0xFFFFFF, 0x181818);
+        
         SDL_GL_SwapWindow(window);
 }
 
@@ -102,7 +137,7 @@ sdl_renderer_t* crt_renderer_create()
         renderer->close = crt_close;
         renderer->update = crt_update;
         renderer->present = crt_present;
-        renderer->always_update = 0;
+        renderer->always_update = 1;
         return renderer;
 }
 
