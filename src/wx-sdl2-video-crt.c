@@ -153,7 +153,7 @@ void crt_present(SDL_Window* window, SDL_Rect video_rect, SDL_Rect window_rect, 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(window_rect.x, window_rect.y, window_rect.w, window_rect.h);
         crtemu->use_frame = crt_monitor_frame ? 1.0f : 0.0f;
-        crtemu_pc_present(crtemu, t, video_rect.w, video_rect.h, 0xFFFFFF, 0x181818);
+        crtemu_pc_present(crtemu, t, video_rect.w, video_rect.h, 0xFFFFFF, 0x000000 );
         
         SDL_GL_SwapWindow(window);
 }
