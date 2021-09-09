@@ -901,6 +901,8 @@ static void crtemu_pc_internal_blur( crtemu_pc_t* crtemu_pc, CRTEMU_PC_GLuint so
     crtemu_pc->BindTexture( CRTEMU_PC_GL_TEXTURE_2D, source );
     crtemu_pc->TexParameteri( CRTEMU_PC_GL_TEXTURE_2D, CRTEMU_PC_GL_TEXTURE_MIN_FILTER, CRTEMU_PC_GL_LINEAR );
     crtemu_pc->TexParameteri( CRTEMU_PC_GL_TEXTURE_2D, CRTEMU_PC_GL_TEXTURE_MAG_FILTER, CRTEMU_PC_GL_LINEAR );
+    crtemu_pc->TexParameteri( CRTEMU_PC_GL_TEXTURE_2D, CRTEMU_PC_GL_TEXTURE_WRAP_S, CRTEMU_PC_GL_CLAMP_TO_BORDER );
+    crtemu_pc->TexParameteri( CRTEMU_PC_GL_TEXTURE_2D, CRTEMU_PC_GL_TEXTURE_WRAP_T, CRTEMU_PC_GL_CLAMP_TO_BORDER );
     crtemu_pc->DrawArrays( CRTEMU_PC_GL_TRIANGLE_FAN, 0, 4 );
     crtemu_pc->ActiveTexture( CRTEMU_PC_GL_TEXTURE0 );
     crtemu_pc->BindTexture( CRTEMU_PC_GL_TEXTURE_2D, 0 );   
@@ -914,6 +916,8 @@ static void crtemu_pc_internal_blur( crtemu_pc_t* crtemu_pc, CRTEMU_PC_GLuint so
     crtemu_pc->BindTexture( CRTEMU_PC_GL_TEXTURE_2D, blurtexture_b );
     crtemu_pc->TexParameteri( CRTEMU_PC_GL_TEXTURE_2D, CRTEMU_PC_GL_TEXTURE_MIN_FILTER, CRTEMU_PC_GL_LINEAR );
     crtemu_pc->TexParameteri( CRTEMU_PC_GL_TEXTURE_2D, CRTEMU_PC_GL_TEXTURE_MAG_FILTER, CRTEMU_PC_GL_LINEAR );
+    crtemu_pc->TexParameteri( CRTEMU_PC_GL_TEXTURE_2D, CRTEMU_PC_GL_TEXTURE_WRAP_S, CRTEMU_PC_GL_CLAMP_TO_BORDER );
+    crtemu_pc->TexParameteri( CRTEMU_PC_GL_TEXTURE_2D, CRTEMU_PC_GL_TEXTURE_WRAP_T, CRTEMU_PC_GL_CLAMP_TO_BORDER );
     crtemu_pc->DrawArrays( CRTEMU_PC_GL_TRIANGLE_FAN, 0, 4 );
     crtemu_pc->ActiveTexture( CRTEMU_PC_GL_TEXTURE0 );
     crtemu_pc->BindTexture( CRTEMU_PC_GL_TEXTURE_2D, 0 );   
