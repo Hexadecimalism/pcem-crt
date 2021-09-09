@@ -85,6 +85,7 @@ extern "C" {
         int wx_image_save(const char* path, const char* name, const char* format, unsigned char* rgba, int width, int height, int alpha);
 
         void* wx_image_load(const char* path);
+        void* wx_image_load_resource(const char* name);
         void wx_image_rescale(void* image, int width, int height);
         void wx_image_get_size(void* image, int* width, int* height);
         unsigned char* wx_image_get_data(void* image);

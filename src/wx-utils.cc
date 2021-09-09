@@ -696,6 +696,18 @@ void* wx_image_load(const char* path)
         return 0;
 }
 
+void* wx_image_load_resource(const char* name)
+{
+        wxBitmap bitmap = wxXmlResource::Get()->LoadBitmap(name);
+        if(bitmap.IsOk())
+        {
+                wxImage* image = new wxImage;
+                *image = bitmap.ConvertToImage();
+                return image;
+        }
+        return 0;
+}
+
 void wx_image_free(void* image)
 {
         delete (wxImage*)image;
