@@ -8,6 +8,7 @@
 #include <string.h>
 #include "ibm.h"
 #include "video.h"
+#include "wx-sdl2.h"
 #include "wx-sdl2-video.h"
 #include "wx-utils.h"
 
@@ -49,6 +50,28 @@ static void crt_load_frame(void* img)
         }
         crtemu_pc_frame(crtemu, (unsigned int*)frame_rgba, frame_w, frame_h);
         free(frame_rgba);
+}
+
+static void crt_take_screenshot(SDL_Window* window)
+{
+        int width, height;
+        SDL_GL_GetDrawableSize(window, &width, &height);
+
+        unsigned char* pixels_rgba = malloc(width * height * 4);
+        unsigned char* pixels_rgb  = malloc(width * height * 3);
+        glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels_rgba);
+        for(int y=0; y<height; ++y)
+        {
+                for(int x=0; x<width; ++x)
+                {
+                        pixels_rgb[3*(y*width+x)+0] = pixels_rgba[4*((height-y-1)*width+x)+0];
+                        pixels_rgb[3*(y*width+x)+1] = pixels_rgba[4*((height-y-1)*width+x)+1];
+                        pixels_rgb[3*(y*width+x)+2] = pixels_rgba[4*((height-y-1)*width+x)+2];
+                }
+        }
+        free(pixels_rgba);
+        screenshot_taken(pixels_rgb, width, height);
+        free(pixels_rgb);
 }
 
 int crt_init(SDL_Window* window, sdl_render_driver requested_render_driver, SDL_Rect screen)
@@ -150,12 +173,18 @@ void crt_present(SDL_Window* window, SDL_Rect video_rect, SDL_Rect window_rect, 
         glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, video_rect.x, video_rect.y, video_rect.w, video_rect.h);
         glBindTexture(GL_TEXTURE_2D, 0);
 
-        int dim = !(SDL_GetWindowFlags(window) & SDL_WINDOW_INPUT_FOCUS) && video_focus_dim;
+        int dim = !(SDL_GetWindowFlags(window) & SDL_WINDOW_INPUT_FOCUS) && video_focus_dim && !take_screenshot;
         unsigned long long t = SDL_GetTicks() * 1000;
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(window_rect.x, window_rect.y, window_rect.w, window_rect.h);
         crtemu->use_frame = crt_monitor_frame ? 1.0f : 0.0f;
         crtemu_pc_present(crtemu, t, video_rect.w, video_rect.h, dim ? 0x808080 : 0xFFFFFF, 0x000000 );
+
+        if(take_screenshot)
+        {
+                take_screenshot = 0;
+                crt_take_screenshot(window);
+        }
         
         SDL_GL_SwapWindow(window);
 }
