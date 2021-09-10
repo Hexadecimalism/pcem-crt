@@ -28,6 +28,7 @@ static int last_video_w = 0;
 static int last_video_h = 0;
 
 extern int video_vsync;
+extern int video_focus_dim;
 
 int crt_monitor_frame = 1;
 
@@ -149,11 +150,12 @@ void crt_present(SDL_Window* window, SDL_Rect video_rect, SDL_Rect window_rect, 
         glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, video_rect.x, video_rect.y, video_rect.w, video_rect.h);
         glBindTexture(GL_TEXTURE_2D, 0);
 
+        int dim = !(SDL_GetWindowFlags(window) & SDL_WINDOW_INPUT_FOCUS) && video_focus_dim;
         unsigned long long t = SDL_GetTicks() * 1000;
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(window_rect.x, window_rect.y, window_rect.w, window_rect.h);
         crtemu->use_frame = crt_monitor_frame ? 1.0f : 0.0f;
-        crtemu_pc_present(crtemu, t, video_rect.w, video_rect.h, 0xFFFFFF, 0x000000 );
+        crtemu_pc_present(crtemu, t, video_rect.w, video_rect.h, dim ? 0x808080 : 0xFFFFFF, 0x000000 );
         
         SDL_GL_SwapWindow(window);
 }

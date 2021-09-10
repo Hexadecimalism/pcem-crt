@@ -703,7 +703,7 @@ crtemu_pc_t* crtemu_pc_create( void* memctx )
 		"	col *= fvig;\n"
 	    "    col = mix( col, mix( max( col, 0.0), pow( abs( f.xyz ), vec3( 1.4 ) ), f.w), vec3( use_frame) );\n"
         "    \n"
-		"	gl_FragColor = vec4( col, 1.0 );\n"
+		"	gl_FragColor = vec4( col * modulate, 1.0 );\n"
 		"	}\n"
 		"	\n"
         "";
@@ -1043,44 +1043,18 @@ void crtemu_pc_present( crtemu_pc_t* crtemu_pc, CRTEMU_PC_U64 time_us, int width
     crtemu_pc->BindFramebuffer( CRTEMU_PC_GL_FRAMEBUFFER, 0 );
 
     crtemu_pc->Viewport( viewport[ 0 ], viewport[ 1 ], viewport[ 2 ], viewport[ 3 ] );
+    int window_width  = viewport[ 2 ];
+    int window_height = viewport[ 3 ];
 
-    int window_width = viewport[ 2 ] - viewport[ 0 ];
-    int window_height = viewport[ 3 ] - viewport[ 1 ];
-
-    window_width = (int)( window_width / 1.2f );
-
-    float hscale = window_width / (float) width;
-    float vscale = window_height / ( (float) height * 1.1f );
-    float pixel_scale = hscale < vscale ? hscale : vscale;
-
-    float hborder = ( window_width - pixel_scale * width ) / 2.0f;
-    float vborder = ( window_height - pixel_scale * height * 1.1f ) / 2.0f;
-    float x1 = hborder;
-    float y1 = vborder;
-    float x2 = x1 + pixel_scale * width;
-    float y2 = y1 + pixel_scale * height * 1.1f;
-
-    x1 = ( x1 / window_width ) * 2.0f - 1.0f;
-    x2 = ( x2 / window_width ) * 2.0f - 1.0f;
-    y1 = ( y1 / window_height ) * 2.0f - 1.0f;
-    y2 = ( y2 / window_height ) * 2.0f - 1.0f;
-
+    float hscale = crtemu_pc->use_frame > 0.0f ? 1.0f : 1.15f;
+    float vscale = crtemu_pc->use_frame > 0.0f ? 1.0f : 1.08f;
     CRTEMU_PC_GLfloat screen_vertices[] = 
         { 
-        0.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 1.0f,
-        0.0f, 0.0f, 0.0f, 1.0f,
+        -hscale,          -vscale, 0.0f, 0.0f,
+         hscale * 1.045f, -vscale, 1.0f, 0.0f,
+         hscale * 1.045f,  vscale, 1.0f, 1.0f,
+        -hscale,           vscale, 0.0f, 1.0f,
         };
-    screen_vertices[  0 ] = x1;
-    screen_vertices[  1 ] = y1;
-    screen_vertices[  4 ] = x2;
-    screen_vertices[  5 ] = y1;
-    screen_vertices[  8 ] = x2;
-    screen_vertices[  9 ] = y2;
-    screen_vertices[ 12 ] = x1;
-    screen_vertices[ 13 ] = y2;
-
     crtemu_pc->BufferData( CRTEMU_PC_GL_ARRAY_BUFFER, 4 * 4 * sizeof( CRTEMU_PC_GLfloat ), screen_vertices, CRTEMU_PC_GL_STATIC_DRAW );
     crtemu_pc->BindBuffer( CRTEMU_PC_GL_ARRAY_BUFFER, crtemu_pc->vertexbuffer );
 
